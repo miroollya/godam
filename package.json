@@ -1,0 +1,10 @@
+{
+    "name": "security-analyzer",
+    "private": true,
+    "scripts": {
+      "start": "python app.py"
+    },
+    "dependencies": {
+      "python-shell": "^5.0.0"
+    }
+  }

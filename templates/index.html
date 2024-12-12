@@ -3,35 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI File Analyzer</title>
+    <title>Security Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>AI-Powered File Analyzer</h1>
-    <form id="uploadForm" enctype="multipart/form-data">
-        <label for="file">Upload File:</label>
-        <input type="file" id="file" name="file" required>
-        <button type="submit">Analyze</button>
-    </form>
-    <div id="result"></div>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center mb-8">Security Analyzer</h1>
+        
+        <!-- File Analysis Section -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 class="text-xl font-semibold mb-4">File Analysis</h2>
+            <form id="fileForm" class="space-y-4">
+                <input type="file" id="fileInput" class="w-full p-2 border rounded">
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    Analyze File
+                </button>
+            </form>
+        </div>
+
+        <!-- URL Analysis Section -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 class="text-xl font-semibold mb-4">URL Analysis</h2>
+            <form id="urlForm" class="space-y-4">
+                <input type="url" id="urlInput" placeholder="Enter URL" class="w-full p-2 border rounded">
+                <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                    Analyze URL
+                </button>
+            </form>
+        </div>
+
+        <!-- Email Analysis Section -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 class="text-xl font-semibold mb-4">Email Sender Analysis</h2>
+            <form id="emailForm" class="space-y-4">
+                <input type="email" id="emailInput" placeholder="Enter email address" class="w-full p-2 border rounded">
+                <button type="submit" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">
+                    Analyze Email
+                </button>
+            </form>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results" class="bg-white p-6 rounded-lg shadow-md hidden">
+            <h2 class="text-xl font-semibold mb-4">Analysis Results</h2>
+            <div id="resultsContent" class="prose"></div>
+        </div>
+    </div>
 
     <script>
-        document.getElementById('uploadForm').onsubmit = async function(e) {
+        document.getElementById('fileForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData();
-            const file = document.getElementById('file').files[0];
-            formData.append('file', file);
+            formData.append('file', document.getElementById('fileInput').files[0]);
+            
+            const response = await fetch('/analyze/file', {
+                method: 'POST',
+                body: formData
+            });
+            showResults(await response.json());
+        });
 
-            try {
-                const response = await fetch('/analyze', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-                document.getElementById('result').innerText = JSON.stringify(data, null, 2);
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        };
+        document.getElementById('urlForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const url = document.getElementById('urlInput').value;
+            
+            const response = await fetch('/analyze/url', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ url })
+            });
+            showResults(await response.json());
+        });
+
+        document.getElementById('emailForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('emailInput').value;
+            
+            const response = await fetch('/analyze/email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email })
+            });
+            showResults(await response.json());
+        });
+
+        function showResults(data) {
+            const resultsDiv = document.getElementById('results');
+            const resultsContent = document.getElementById('resultsContent');
+            
+            resultsDiv.classList.remove('hidden');
+            resultsContent.innerHTML = `
+                <div class="space-y-4">
+                    ${data.virustotal_results ? `
+                        <div class="mb-4">
+                            <h3 class="text-lg font-semibold">VirusTotal Results:</h3>
+                            <pre class="bg-gray-100 p-4 rounded">${JSON.stringify(data.virustotal_results, null, 2)}</pre>
+                        </div>
+                    ` : ''}
+                    <div>
+                        <h3 class="text-lg font-semibold">AI Analysis:</h3>
+                        <div class="bg-gray-100 p-4 rounded">${data.ai_analysis}</div>
+                    </div>
+                </div>
+            `;
+        }
     </script>
 </body>
 </html>
