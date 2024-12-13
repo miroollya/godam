@@ -9,3 +9,4 @@ class Config:
     VIRUSTOTAL_API_KEY = os.getenv('VIRUSTOTAL_API_KEY')
     OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
     MODEL_PATH = 'models/security_classifier.pkl'
+    TRAIN_ENDPOINT = "/train"
