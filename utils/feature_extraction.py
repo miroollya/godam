@@ -18,8 +18,8 @@ class FeatureExtractor:
             total_engines      # Total engines scanned
         ]
 
-        @staticmethod
-        def extract_email_features(email):
+    @staticmethod
+    def extract_email_features(email):
             """Extract features from email address"""
             if not email:
                 return {'length': 0, 'has_number': 0, 'domain_length': 0}
@@ -34,8 +34,8 @@ class FeatureExtractor:
             }
             return features
 
-        @staticmethod
-        def extract_features(input_data):
+    @staticmethod
+    def extract_features(input_data):
             # Add logic for extracting relevant features here
             features = [input_data['value1'], input_data['value2']]  # Example
             return features
