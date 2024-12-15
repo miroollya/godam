@@ -122,7 +122,7 @@ We developed an intelligent security analyzer that:
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/security-analyzer.git
+git clone https://github.com/miroollya/godam.git
 ```
 
 2. Install dependencies:
