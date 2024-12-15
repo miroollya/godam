@@ -199,3 +199,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 For any queries or suggestions, please reach out to:
 - Email: 2021454448@student.uitm.edu.my
 - GitHub: miroollya
+
+## example
+
+Here is an example of the AI-Powered Security Analyzer in action:
+
+![Example url](uploads/url.png)
+![Example file](uploads/file.png)
+![Example email](uploads/email.png)
