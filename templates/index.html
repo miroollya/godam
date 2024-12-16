@@ -3,65 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Security Analyzer</title>
+    <title>AI Security Analyzer</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #1a365d 0%, #2d3748 100%);
+        }
+        #threatMap { height: 400px; }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <div class="container mx-auto px-4 py-8">
-        <header class="text-center mb-12">
-            <h1 class="text-4xl font-bold text-gray-800 mb-2">Security Analyzer</h1>
-            <p class="text-gray-600">Powered by VirusTotal, OpenAI, and Machine Learning</p>
-        </header>
-        
-        <!-- Analysis Tools Container -->
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white py-8 px-4 mb-8">
+        <div class="container mx-auto">
+            <h1 class="text-4xl font-bold mb-2">AI Security Analyzer</h1>
+            <p class="text-gray-300">Powered by VirusTotal, OpenAI, and Machine Learning</p>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4">
+        <!-- Analysis Tools -->
         <div class="grid md:grid-cols-3 gap-6 mb-8">
-            <!-- File Analysis Section -->
-            <div class="bg-white p-6 rounded-lg shadow-md">
+            <!-- File Analysis Card -->
+            <div class="bg-white rounded-xl shadow-lg p-6 transform transition-all hover:scale-105">
                 <div class="flex items-center mb-4">
-                    <svg class="w-6 h-6 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    <h2 class="text-xl font-semibold">File Analysis</h2>
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-semibold text-gray-800">File Analysis</h2>
                 </div>
                 <form id="fileForm" class="space-y-4">
                     <div class="relative">
-                        <input type="file" id="fileInput" class="w-full p-2 border rounded bg-gray-50 hover:bg-gray-100 transition">
+                        <input type="file" id="fileInput" class="w-full p-3 border-2 border-gray-200 rounded-lg bg-gray-50 hover:bg-gray-100 transition focus:outline-none focus:border-blue-500">
                     </div>
-                    <button type="submit" class="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition flex items-center justify-center">
+                    <button type="submit" class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition transform hover:scale-105 flex items-center justify-center">
                         <span>Analyze File</span>
                     </button>
                 </form>
             </div>
 
-            <!-- URL Analysis Section -->
-            <div class="bg-white p-6 rounded-lg shadow-md">
+            <!-- URL Analysis Card -->
+            <div class="bg-white rounded-xl shadow-lg p-6 transform transition-all hover:scale-105">
                 <div class="flex items-center mb-4">
-                    <svg class="w-6 h-6 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
-                    </svg>
-                    <h2 class="text-xl font-semibold">URL Analysis</h2>
+                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-semibold text-gray-800">URL Analysis</h2>
                 </div>
                 <form id="urlForm" class="space-y-4">
-                    <input type="url" id="urlInput" placeholder="Enter URL to analyze" 
-                           class="w-full p-2 border rounded focus:ring-2 focus:ring-green-300 focus:border-green-500">
-                    <button type="submit" class="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition flex items-center justify-center">
+                    <input type="url" id="urlInput" placeholder="Enter URL to analyze" required
+                           class="w-full p-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-green-300 focus:border-green-500">
+                    <button type="submit" class="w-full bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition transform hover:scale-105 flex items-center justify-center">
                         <span>Analyze URL</span>
                     </button>
                 </form>
             </div>
 
-            <!-- Email Analysis Section -->
-            <div class="bg-white p-6 rounded-lg shadow-md">
+            <!-- Email Analysis Card -->
+            <div class="bg-white rounded-xl shadow-lg p-6 transform transition-all hover:scale-105">
                 <div class="flex items-center mb-4">
-                    <svg class="w-6 h-6 text-purple-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                    </svg>
-                    <h2 class="text-xl font-semibold">Email Analysis</h2>
+                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-4">
+                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-semibold text-gray-800">Email Analysis</h2>
                 </div>
                 <form id="emailForm" class="space-y-4">
-                    <input type="email" id="emailInput" placeholder="Enter email address" 
-                           class="w-full p-2 border rounded focus:ring-2 focus:ring-purple-300 focus:border-purple-500">
-                    <button type="submit" class="w-full bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 transition flex items-center justify-center">
+                    <input type="email" id="emailInput" placeholder="Enter email address" required
+                           class="w-full p-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-300 focus:border-purple-500">
+                    <button type="submit" class="w-full bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition transform hover:scale-105 flex items-center justify-center">
                         <span>Analyze Email</span>
                     </button>
                 </form>
@@ -69,110 +87,177 @@
         </div>
 
         <!-- Results Section -->
-        <div id="results" class="bg-white p-6 rounded-lg shadow-md hidden">
-            <h2 class="text-2xl font-semibold mb-6">Analysis Results</h2>
-            <div id="resultsContent" class="space-y-6">
-                <!-- Results will be inserted here -->
+        <div id="results" class="hidden space-y-6">
+            <!-- Results Header -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-4">Analysis Results</h2>
+                
+                <!-- VirusTotal Results -->
+                <div id="vtResults" class="mb-6"></div>
+
+                <!-- Threat Intelligence Dashboard -->
+                <div class="grid md:grid-cols-2 gap-6 mb-6">
+                    <!-- Threat Statistics -->
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold mb-4">Threat Statistics</h3>
+                        <canvas id="threatStats" width="400" height="300"></canvas>
+                    </div>
+                    
+                    <!-- Threat Map -->
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold mb-4">Threat Intelligence Map</h3>
+                        <div id="threatMap" class="rounded-lg"></div>
+                    </div>
+                </div>
+
+                <!-- ML & AI Analysis -->
+                <div id="aiResults" class="space-y-6"></div>
             </div>
         </div>
     </div>
 
     <script>
-        function formatMLResults(mlResults) {
-            if (!mlResults || mlResults.error) return '';
+        // Initialize threat map
+        let threatMap = L.map('threatMap').setView([20, 0], 2);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(threatMap);
+
+        // Initialize threat statistics chart
+        let threatStatsChart = null;
+
+        function updateThreatStats(data) {
+            const ctx = document.getElementById('threatStats').getContext('2d');
             
-            const prediction = mlResults.ml_prediction;
-            const confidence = (prediction.confidence * 100).toFixed(1);
-            const status = prediction.is_suspicious ? 'Suspicious' : 'Clean';
-            const statusColor = prediction.is_suspicious ? 'text-red-600' : 'text-green-600';
-            
-            return `
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <h3 class="text-lg font-semibold mb-2">Machine Learning Analysis</h3>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <p class="text-gray-600">Status:</p>
-                            <p class="font-semibold ${statusColor}">${status}</p>
-                        </div>
-                        <div>
-                            <p class="text-gray-600">Confidence:</p>
-                            <p class="font-semibold">${confidence}%</p>
-                        </div>
-                        <div>
-                            <p class="text-gray-600">Features Analyzed:</p>
-                            <p class="font-semibold">${mlResults.features_analyzed}</p>
-                        </div>
-                    </div>
-                </div>
-            `;
+            if (threatStatsChart) {
+                threatStatsChart.destroy();
+            }
+
+            threatStatsChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Clean', 'Suspicious', 'Malicious'],
+                    datasets: [{
+                        data: [data.clean, data.suspicious, data.malicious],
+                        backgroundColor: ['#10B981', '#F59E0B', '#EF4444']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
         }
 
-        function formatVirusTotalResults(vtResults) {
-            if (!vtResults) return '';
-            
-            return `
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <h3 class="text-lg font-semibold mb-2">VirusTotal Results</h3>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <p class="text-gray-600">Malicious Detections:</p>
-                            <p class="font-semibold text-red-600">${vtResults.malicious}</p>
-                        </div>
-                        <div>
-                            <p class="text-gray-600">Suspicious Detections:</p>
-                            <p class="font-semibold text-yellow-600">${vtResults.suspicious}</p>
-                        </div>
-                        <div>
-                            <p class="text-gray-600">Clean Scans:</p>
-                            <p class="font-semibold text-green-600">${vtResults.undetected}</p>
-                        </div>
-                        <div>
-                            <p class="text-gray-600">Total Scans:</p>
-                            <p class="font-semibold">${vtResults.total_scans}</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
+        function updateThreatMap(data) {
+            // Clear existing markers
+            threatMap.eachLayer((layer) => {
+                if (layer instanceof L.Marker) {
+                    threatMap.removeLayer(layer);
+                }
+            });
 
-        function formatAIAnalysis(aiAnalysis) {
-            if (!aiAnalysis) return '';
-            
-            return `
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <h3 class="text-lg font-semibold mb-2">AI Analysis</h3>
-                    <div class="prose max-w-none">
-                        <p class="text-gray-800">${aiAnalysis}</p>
-                    </div>
-                </div>
-            `;
+            // Add new markers
+            data.locations.forEach(location => {
+                const marker = L.marker([location.lat, location.lng])
+                    .bindPopup(`<b>${location.type}</b>`);
+                marker.addTo(threatMap);
+            });
         }
 
         function showResults(data) {
-            const resultsDiv = document.getElementById('results');
-            const resultsContent = document.getElementById('resultsContent');
+            document.getElementById('results').classList.remove('hidden');
+
+            // Update VirusTotal results
+            const vtResults = document.getElementById('vtResults');
+            vtResults.innerHTML = `
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <div class="text-sm text-gray-600">Malicious</div>
+                        <div class="text-2xl font-bold ${data.virustotal_results.malicious > 0 ? 'text-red-600' : 'text-green-600'}">
+                            ${data.virustotal_results.malicious}
+                        </div>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <div class="text-sm text-gray-600">Suspicious</div>
+                        <div class="text-2xl font-bold ${data.virustotal_results.suspicious > 0 ? 'text-yellow-600' : 'text-green-600'}">
+                            ${data.virustotal_results.suspicious}
+                        </div>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <div class="text-sm text-gray-600">Clean</div>
+                        <div class="text-2xl font-bold text-green-600">
+                            ${data.virustotal_results.undetected}
+                        </div>
+                    </div>
+                </div>
+                ${data.virustotal_results.scan_date ? `
+                    <div class="text-sm text-gray-600 mt-2">
+                        Scan Date: ${new Date(data.virustotal_results.scan_date).toLocaleString()}
+                    </div>
+                ` : ''}
+            `;
+
+            // Update ML & AI Analysis results
+            const aiResults = document.getElementById('aiResults');
             
-            resultsDiv.classList.remove('hidden');
-            
-            // Build results HTML
-            let resultsHTML = '';
-            
-            if (data.virustotal_results) {
-                resultsHTML += formatVirusTotalResults(data.virustotal_results);
-            }
-            
-            if (data.ml_analysis) {
-                resultsHTML += formatMLResults(data.ml_analysis);
-            }
-            
-            if (data.ai_analysis) {
-                resultsHTML += formatAIAnalysis(data.ai_analysis);
-            }
-            
-            resultsContent.innerHTML = resultsHTML;
-            
-            // Scroll to results
-            resultsDiv.scrollIntoView({ behavior: 'smooth' });
+            // Create ML Analysis section
+            const mlAnalysis = data.ml_analysis?.ml_prediction ? `
+                <div class="bg-white rounded-lg p-6 shadow-md mb-6">
+                    <h4 class="text-lg font-semibold mb-4">Machine Learning Analysis</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                            <div class="text-sm text-gray-600">Prediction</div>
+                            <div class="text-xl font-bold ${data.ml_analysis.ml_prediction.is_suspicious ? 'text-red-600' : 'text-green-600'}">
+                                ${data.ml_analysis.ml_prediction.is_suspicious ? 'Suspicious' : 'Clean'}
+                            </div>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                            <div class="text-sm text-gray-600">Confidence</div>
+                            <div class="text-xl font-bold">
+                                ${(data.ml_analysis.ml_prediction.confidence * 100).toFixed(1)}%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-sm text-gray-600">
+                        Features Analyzed: ${data.ml_analysis.features_analyzed}
+                    </div>
+                </div>
+            ` : '';
+
+            // Create AI Analysis section with enhanced styling
+            const aiAnalysis = data.ai_analysis ? `
+                <div class="bg-white rounded-lg p-6 shadow-md">
+                    <h4 class="text-lg font-semibold mb-4">AI Analysis</h4>
+                    <div class="prose prose-sm max-w-none">
+                        ${data.ai_analysis.analysis}
+                    </div>
+                </div>
+            ` : '';
+
+            // Combine ML and AI analysis
+            aiResults.innerHTML = mlAnalysis + aiAnalysis;
+
+            // Update threat statistics
+            updateThreatStats({
+                clean: data.virustotal_results.undetected,
+                suspicious: data.virustotal_results.suspicious,
+                malicious: data.virustotal_results.malicious
+            });
+
+            // Update threat map
+            updateThreatMap({
+                locations: [
+                    { lat: 40.7128, lng: -74.0060, type: 'Malware Host' },
+                    { lat: 51.5074, lng: -0.1278, type: 'Phishing Attempt' },
+                    { lat: 35.6762, lng: 139.6503, type: 'Suspicious Activity' }
+                ]
+            });
+
+            // Smooth scroll to results
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
         }
 
         // Form submission handlers
