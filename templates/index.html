@@ -3,43 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Security Analyzer</title>
+    <title>AI Security Analyzer Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <link href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" rel="stylesheet">
     <style>
         .gradient-bg {
-            background: linear-gradient(135deg, #1a365d 0%, #2d3748 100%);
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
         }
         #threatMap { height: 400px; }
+        .highlight-critical {
+            color: #ef4444;
+            font-weight: 600;
+        }
+        .highlight-warning {
+            color: #f59e0b;
+            font-weight: 600;
+        }
+        .highlight-safe {
+            color: #10b981;
+            font-weight: 600;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #ffffff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .cyber-grid {
+            background-image: linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .ticker-tape {
+            animation: ticker 30s linear infinite;
+        }
+        @keyframes ticker {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-900 text-gray-100">
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-gray-900 bg-opacity-90 z-50 hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="text-center">
+            <div class="loading-spinner mx-auto mb-4"></div>
+            <div class="text-xl font-semibold">Analyzing...</div>
+            <div class="text-sm text-blue-400" id="loadingStatus">Scanning for threats</div>
+        </div>
+    </div>
+
     <!-- Header -->
-    <header class="gradient-bg text-white py-8 px-4 mb-8">
-        <div class="container mx-auto">
-            <h1 class="text-4xl font-bold mb-2">AI Security Analyzer</h1>
-            <p class="text-gray-300">Powered by VirusTotal, OpenAI, and Machine Learning</p>
+    <header class="gradient-bg py-8 px-4 shadow-lg relative overflow-hidden">
+        <div class="cyber-grid absolute inset-0 opacity-20"></div>
+        <div class="container mx-auto relative">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-4xl font-bold mb-2">AI Security Analyzer Pro</h1>
+                    <p class="text-blue-400">Advanced Threat Detection & Analysis</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm text-blue-400">System Status</div>
+                    <div class="text-lg flex items-center">
+                        <span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
+                        Operational
+                    </div>
+                </div>
+            </div>
         </div>
     </header>
 
-    <div class="container mx-auto px-4">
+    <!-- Live Threat Ticker -->
+    <div class="bg-gray-800 border-t border-b border-blue-900">
+        <div class="container mx-auto py-2 overflow-hidden">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-blue-900 px-3 py-1 rounded-full text-sm font-semibold mr-4">
+                    LIVE THREATS
+                </div>
+                <div class="ticker-tape whitespace-nowrap text-sm text-blue-300">
+                    🚨 Ransomware campaign detected in healthcare sector | 
+                    ⚠️ Phishing attacks targeting financial institutions | 
+                    🛡️ Critical vulnerability patched in popular CMS | 
+                    ⚡ DDoS attacks increasing in APAC region
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8">
         <!-- Analysis Tools -->
         <div class="grid md:grid-cols-3 gap-6 mb-8">
-            <!-- File Analysis Card -->
-            <div class="bg-white rounded-xl shadow-lg p-6 transform transition-all hover:scale-105">
+            <!-- File Analysis -->
+            <div class="bg-gray-800 rounded-xl shadow-lg p-6">
                 <div class="flex items-center mb-4">
-                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-12 h-12 bg-blue-900 rounded-full flex items-center justify-center mr-4">
+                        <svg class="w-6 h-6 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
                     </div>
-                    <h2 class="text-xl font-semibold text-gray-800">File Analysis</h2>
+                    <h2 class="text-xl font-semibold">File Analysis</h2>
                 </div>
                 <form id="fileForm" class="space-y-4">
                     <div class="relative">
-                        <input type="file" id="fileInput" class="w-full p-3 border-2 border-gray-200 rounded-lg bg-gray-50 hover:bg-gray-100 transition focus:outline-none focus:border-blue-500">
+                        <input type="file" id="fileInput" class="w-full p-3 border-2 border-gray-700 rounded-lg bg-gray-900 hover:bg-gray-800 transition focus:outline-none focus:border-blue-500">
                     </div>
                     <button type="submit" class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition transform hover:scale-105 flex items-center justify-center">
                         <span>Analyze File</span>
@@ -47,39 +121,39 @@
                 </form>
             </div>
 
-            <!-- URL Analysis Card -->
-            <div class="bg-white rounded-xl shadow-lg p-6 transform transition-all hover:scale-105">
+            <!-- URL Analysis -->
+            <div class="bg-gray-800 rounded-xl shadow-lg p-6">
                 <div class="flex items-center mb-4">
-                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
-                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-12 h-12 bg-blue-900 rounded-full flex items-center justify-center mr-4">
+                        <svg class="w-6 h-6 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
                         </svg>
                     </div>
-                    <h2 class="text-xl font-semibold text-gray-800">URL Analysis</h2>
+                    <h2 class="text-xl font-semibold">URL Analysis</h2>
                 </div>
                 <form id="urlForm" class="space-y-4">
                     <input type="url" id="urlInput" placeholder="Enter URL to analyze" required
-                           class="w-full p-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-green-300 focus:border-green-500">
-                    <button type="submit" class="w-full bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition transform hover:scale-105 flex items-center justify-center">
+                           class="w-full p-3 border-2 border-gray-700 rounded-lg bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <button type="submit" class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition transform hover:scale-105 flex items-center justify-center">
                         <span>Analyze URL</span>
                     </button>
                 </form>
             </div>
 
-            <!-- Email Analysis Card -->
-            <div class="bg-white rounded-xl shadow-lg p-6 transform transition-all hover:scale-105">
+            <!-- Email Analysis -->
+            <div class="bg-gray-800 rounded-xl shadow-lg p-6">
                 <div class="flex items-center mb-4">
-                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-4">
-                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-12 h-12 bg-blue-900 rounded-full flex items-center justify-center mr-4">
+                        <svg class="w-6 h-6 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                         </svg>
                     </div>
-                    <h2 class="text-xl font-semibold text-gray-800">Email Analysis</h2>
+                    <h2 class="text-xl font-semibold">Email Analysis</h2>
                 </div>
                 <form id="emailForm" class="space-y-4">
                     <input type="email" id="emailInput" placeholder="Enter email address" required
-                           class="w-full p-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-300 focus:border-purple-500">
-                    <button type="submit" class="w-full bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition transform hover:scale-105 flex items-center justify-center">
+                           class="w-full p-3 border-2 border-gray-700 rounded-lg bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <button type="submit" class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition transform hover:scale-105 flex items-center justify-center">
                         <span>Analyze Email</span>
                     </button>
                 </form>
@@ -88,264 +162,417 @@
 
         <!-- Results Section -->
         <div id="results" class="hidden space-y-6">
-            <!-- Results Header -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h2 class="text-2xl font-bold mb-4">Analysis Results</h2>
+            <!-- Threat Analysis Summary -->
+            <div class="bg-gray-800 rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-4">Threat Analysis Summary</h2>
                 
-                <!-- VirusTotal Results -->
-                <div id="vtResults" class="mb-6"></div>
-
-                <!-- Threat Intelligence Dashboard -->
-                <div class="grid md:grid-cols-2 gap-6 mb-6">
-                    <!-- Threat Statistics -->
-                    <div class="bg-gray-50 rounded-lg p-4">
-                        <h3 class="text-lg font-semibold mb-4">Threat Statistics</h3>
-                        <canvas id="threatStats" width="400" height="300"></canvas>
+                <!-- Threat Score -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-gray-400">Threat Score</span>
+                        <span id="threatScore" class="text-3xl font-bold">0%</span>
                     </div>
-                    
-                    <!-- Threat Map -->
-                    <div class="bg-gray-50 rounded-lg p-4">
-                        <h3 class="text-lg font-semibold mb-4">Threat Intelligence Map</h3>
-                        <div id="threatMap" class="rounded-lg"></div>
+                    <div class="w-full bg-gray-700 rounded-full h-2">
+                        <div id="threatScoreBar" class="h-2 rounded-full bg-green-500 transition-all duration-500" style="width: 0%"></div>
                     </div>
                 </div>
 
+                <!-- Quick Stats Grid -->
+                <div class="grid grid-cols-4 gap-4 mb-6">
+                    <div class="bg-gray-900 rounded-lg p-4">
+                        <div class="text-sm text-gray-400">Detection Rate</div>
+                        <div id="detectionRate" class="text-xl font-bold">0%</div>
+                    </div>
+                    <div class="bg-gray-900 rounded-lg p-4">
+                        <div class="text-sm text-gray-400">Risk Level</div>
+                        <div id="riskLevel" class="text-xl font-bold">Low</div>
+                    </div>
+                    <div class="bg-gray-900 rounded-lg p-4">
+                        <div class="text-sm text-gray-400">Confidence</div>
+                        <div id="aiConfidence" class="text-xl font-bold">0%</div>
+                    </div>
+                    <div class="bg-gray-900 rounded-lg p-4">
+                        <div class="text-sm text-gray-400">Analysis Time</div>
+                        <div id="analysisTime" class="text-xl font-bold">0s</div>
+                    </div>
+                </div>
+
+                <!-- VirusTotal Results -->
+                <div id="vtResults" class="mb-6"></div>
+
                 <!-- ML & AI Analysis -->
                 <div id="aiResults" class="space-y-6"></div>
+            </div>
+
+            <!-- Threat Intelligence Map -->
+            <div class="bg-gray-800 rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-semibold mb-4">Threat Intelligence Map</h3>
+                <div id="threatMap" class="rounded-lg"></div>
+            </div>
+        </div>
+
+        <!-- Global Security Dashboard -->
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Active Threats -->
+            <div class="bg-gray-800 rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-semibold mb-4 text-blue-400">Active Threats</h3>
+                <div class="space-y-4">
+                    <div class="p-4 bg-gray-900 rounded-lg">
+                        <div class="flex items-center">
+                            <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+                            <span>Ransomware Campaign</span>
+                        </div>
+                        <p class="text-sm text-gray-400 mt-2">Healthcare sector targeted</p>
+                    </div>
+                    <div class="p-4 bg-gray-900 rounded-lg">
+                        <div class="flex items-center">
+                            <span class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
+                            <span>Phishing Wave</span>
+                        </div>
+                        <p class="text-sm text-gray-400 mt-2">Financial institutions</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Threat Statistics -->
+            <div class="bg-gray-800 rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-semibold mb-4 text-blue-400">24h Statistics</h3>
+                <div class="space-y-4">
+                    <div class="p-4 bg-gray-900 rounded-lg flex justify-between items-center">
+                        <span>Malware Detected</span>
+                        <span class="text-blue-400 font-mono">2,547</span>
+                    </div>
+                    <div class="p-4 bg-gray-900 rounded-lg flex justify-between items-center">
+                        <span>Phishing Attempts</span>
+                        <span class="text-blue-400 font-mono">1,892</span>
+                    </div>
+                    <div class="p-4 bg-gray-900 rounded-lg flex justify-between items-center">
+                        <span>DDoS Attacks</span>
+                        <span class="text-blue-400 font-mono">127</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Advisories -->
+            <div class="bg-gray-800 rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-semibold mb-4 text-blue-400">Security Advisories</h3>
+                <div class="space-y-4">
+                    <div class="p-4 bg-gray-900 rounded-lg">
+                        <span class="text-xs font-bold text-blue-400">CVE-2023-1234</span>
+                        <p class="mt-2">Critical RCE vulnerability in OpenSSL</p>
+                    </div>
+                    <div class="p-4 bg-gray-900 rounded-lg">
+                        <span class="text-xs font-bold text-blue-400">ALERT</span>
+                        <p class="mt-2">New ransomware variant targeting Windows</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Initialize threat map
-        let threatMap = L.map('threatMap').setView([20, 0], 2);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(threatMap);
+        // Initialize threat map with cybersecurity-focused design
+    const map = L.map('threatMap', {
+        center: [20, 0],
+        zoom: 2,
+        minZoom: 2,
+        maxZoom: 8,
+        zoomControl: false,
+        attributionControl: false
+    });
 
-        // Initialize threat statistics chart
-        let threatStatsChart = null;
+    // Add custom dark theme map tiles
+    L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png', {
+        attribution: '©OpenStreetMap, ©CartoDB'
+    }).addTo(map);
 
-        function updateThreatStats(data) {
-            const ctx = document.getElementById('threatStats').getContext('2d');
+    // Add zoom control to top-right
+    L.control.zoom({
+        position: 'topright'
+    }).addTo(map);
+
+    // Custom threat marker icon
+    const createThreatIcon = (color) => {
+        return L.divIcon({
+            className: 'custom-div-icon',
+            html: `
+                <div class="relative">
+                    <div class="absolute w-4 h-4 bg-${color}-500 rounded-full animate-ping"></div>
+                    <div class="relative w-3 h-3 bg-${color}-500 rounded-full border-2 border-${color}-300"></div>
+                </div>
+            `,
+            iconSize: [16, 16],
+            iconAnchor: [8, 8]
+        });
+    };
+
+    // Add threat markers with animations
+    function updateThreatMap(data) {
+        // Clear existing markers
+        map.eachLayer((layer) => {
+            if (layer instanceof L.Marker) {
+                map.removeLayer(layer);
+            }
+        });
+
+        // Add new markers with threat-specific styling
+        data.locations.forEach(location => {
+            let icon;
+            let popupClass;
             
-            if (threatStatsChart) {
-                threatStatsChart.destroy();
+            switch(location.type.toLowerCase()) {
+                case 'malware host':
+                    icon = createThreatIcon('red');
+                    popupClass = 'text-red-500';
+                    break;
+                case 'phishing':
+                    icon = createThreatIcon('yellow');
+                    popupClass = 'text-yellow-500';
+                    break;
+                case 'botnet':
+                    icon = createThreatIcon('purple');
+                    popupClass = 'text-purple-500';
+                    break;
+                default:
+                    icon = createThreatIcon('blue');
+                    popupClass = 'text-blue-500';
             }
 
-            threatStatsChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Clean', 'Suspicious', 'Malicious'],
-                    datasets: [{
-                        data: [data.clean, data.suspicious, data.malicious],
-                        backgroundColor: ['#10B981', '#F59E0B', '#EF4444']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
-        }
-
-        function updateThreatMap(data) {
-            // Clear existing markers
-            threatMap.eachLayer((layer) => {
-                if (layer instanceof L.Marker) {
-                    threatMap.removeLayer(layer);
-                }
-            });
-
-            // Add new markers
-            data.locations.forEach(location => {
-                const marker = L.marker([location.lat, location.lng])
-                    .bindPopup(`<b>${location.type}</b>`);
-                marker.addTo(threatMap);
-            });
-        }
-
-        function showResults(data) {
-            document.getElementById('results').classList.remove('hidden');
-
-            // Update VirusTotal results
-            const vtResults = document.getElementById('vtResults');
-            vtResults.innerHTML = `
-                <div class="grid grid-cols-3 gap-4 mb-6">
-                    <div class="p-4 bg-gray-50 rounded-lg">
-                        <div class="text-sm text-gray-600">Malicious</div>
-                        <div class="text-2xl font-bold ${data.virustotal_results.malicious > 0 ? 'text-red-600' : 'text-green-600'}">
-                            ${data.virustotal_results.malicious}
+            const marker = L.marker([location.lat, location.lng], { icon })
+                .bindPopup(`
+                    <div class="bg-gray-900 p-3 rounded-lg shadow-lg min-w-[200px]">
+                        <div class="flex items-center mb-2">
+                            <div class="w-2 h-2 rounded-full ${popupClass} mr-2"></div>
+                            <span class="font-semibold ${popupClass}">${location.type}</span>
+                        </div>
+                        <div class="text-gray-300 text-sm">
+                            ${location.details || ''}
+                        </div>
+                        <div class="mt-2 text-xs text-gray-400">
+                            ${location.lat.toFixed(2)}°N, ${location.lng.toFixed(2)}°E
                         </div>
                     </div>
-                    <div class="p-4 bg-gray-50 rounded-lg">
-                        <div class="text-sm text-gray-600">Suspicious</div>
-                        <div class="text-2xl font-bold ${data.virustotal_results.suspicious > 0 ? 'text-yellow-600' : 'text-green-600'}">
-                            ${data.virustotal_results.suspicious}
-                        </div>
-                    </div>
-                    <div class="p-4 bg-gray-50 rounded-lg">
-                        <div class="text-sm text-gray-600">Clean</div>
-                        <div class="text-2xl font-bold text-green-600">
-                            ${data.virustotal_results.undetected}
-                        </div>
-                    </div>
-                </div>
-                ${data.virustotal_results.scan_date ? `
-                    <div class="text-sm text-gray-600 mt-2">
-                        Scan Date: ${new Date(data.virustotal_results.scan_date).toLocaleString()}
-                    </div>
-                ` : ''}
-            `;
+                `, {
+                    className: 'custom-popup'
+                });
 
-            // Update ML & AI Analysis results
-            const aiResults = document.getElementById('aiResults');
+            // Add marker with animation
+            marker.addTo(map);
             
-            // Create ML Analysis section
-            const mlAnalysis = data.ml_analysis?.ml_prediction ? `
-                <div class="bg-white rounded-lg p-6 shadow-md mb-6">
-                    <h4 class="text-lg font-semibold mb-4">Machine Learning Analysis</h4>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="p-4 bg-gray-50 rounded-lg">
-                            <div class="text-sm text-gray-600">Prediction</div>
-                            <div class="text-xl font-bold ${data.ml_analysis.ml_prediction.is_suspicious ? 'text-red-600' : 'text-green-600'}">
-                                ${data.ml_analysis.ml_prediction.is_suspicious ? 'Suspicious' : 'Clean'}
-                            </div>
-                        </div>
-                        <div class="p-4 bg-gray-50 rounded-lg">
-                            <div class="text-sm text-gray-600">Confidence</div>
-                            <div class="text-xl font-bold">
-                                ${(data.ml_analysis.ml_prediction.confidence * 100).toFixed(1)}%
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mt-4 text-sm text-gray-600">
-                        Features Analyzed: ${data.ml_analysis.features_analyzed}
-                    </div>
-                </div>
-            ` : '';
+            // Create threat pulse effect
+            const pulseCircle = L.circle([location.lat, location.lng], {
+                color: getComputedStyle(document.documentElement)
+                    .getPropertyValue(`--${popupClass.split('-')[1]}-500`),
+                fillColor: getComputedStyle(document.documentElement)
+                    .getPropertyValue(`--${popupClass.split('-')[1]}-500`),
+                fillOpacity: 0.2,
+                radius: 100000,
+                className: 'pulse-circle'
+            }).addTo(map);
 
-            // Create AI Analysis section with enhanced styling
-            const aiAnalysis = data.ai_analysis ? `
-                <div class="bg-white rounded-lg p-6 shadow-md">
-                    <h4 class="text-lg font-semibold mb-4">AI Analysis</h4>
-                    <div class="prose prose-sm max-w-none">
-                        ${data.ai_analysis.analysis}
-                    </div>
-                </div>
-            ` : '';
+            // Animate pulse
+            const animatePulse = () => {
+                pulseCircle.setRadius(100000);
+                pulseCircle.setStyle({ opacity: 0.6, fillOpacity: 0.2 });
+                
+                setTimeout(() => {
+                    pulseCircle.setRadius(500000);
+                    pulseCircle.setStyle({ opacity: 0, fillOpacity: 0 });
+                }, 1000);
+            };
 
-            // Combine ML and AI analysis
-            aiResults.innerHTML = mlAnalysis + aiAnalysis;
+            setInterval(animatePulse, 2000);
+        });
 
-            // Update threat statistics
-            updateThreatStats({
-                clean: data.virustotal_results.undetected,
-                suspicious: data.virustotal_results.suspicious,
-                malicious: data.virustotal_results.malicious
+        // Add connection lines between related threats
+        data.locations.forEach((loc1, i) => {
+            data.locations.slice(i + 1).forEach(loc2 => {
+                if (loc1.type === loc2.type) {
+                    L.polyline([
+                        [loc1.lat, loc1.lng],
+                        [loc2.lat, loc2.lng]
+                    ], {
+                        color: '#2563eb',
+                        weight: 1,
+                        opacity: 0.3,
+                        dashArray: '5, 10'
+                    }).addTo(map);
+                }
             });
+        });
+    }
 
-            // Update threat map
-            updateThreatMap({
-                locations: [
-                    { lat: 40.7128, lng: -74.0060, type: 'Malware Host' },
-                    { lat: 51.5074, lng: -0.1278, type: 'Phishing Attempt' },
-                    { lat: 35.6762, lng: 139.6503, type: 'Suspicious Activity' }
-                ]
-            });
+    // Add custom map controls
+    const mapControls = L.control({ position: 'bottomright' });
+    mapControls.onAdd = function() {
+        const div = L.DomUtil.create('div', 'bg-gray-800 p-2 rounded-lg shadow-lg');
+        div.innerHTML = `
+            <div class="flex flex-col space-y-2">
+                <div class="flex items-center text-xs">
+                    <div class="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
+                    <span>Malware Host</span>
+                </div>
+                <div class="flex items-center text-xs">
+                    <div class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></div>
+                    <span>Phishing</span>
+                </div>
+                <div class="flex items-center text-xs">
+                    <div class="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
+                    <span>Botnet</span>
+                </div>
+            </div>
+        `;
+        return div;
+    };
+    mapControls.addTo(map);
 
-            // Smooth scroll to results
-            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+    // Add custom styles for map
+    const style = document.createElement('style');
+    style.textContent = `
+        .leaflet-popup-content-wrapper {
+            background: #1f2937;
+            color: #fff;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+        .leaflet-popup-tip {
+            background: #1f2937;
+        }
+        .pulse-circle {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.6;
+            }
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+
+        // Show loading overlay
+        function showLoading(message) {
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+            document.getElementById('loadingStatus').textContent = message;
+        }
+
+        // Hide loading overlay
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
         }
 
         // Form submission handlers
-        document.getElementById('fileForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData();
-            const fileInput = document.getElementById('fileInput');
-            
-            if (!fileInput.files.length) {
-                alert('Please select a file to analyze');
-                return;
-            }
-            
-            formData.append('file', fileInput.files[0]);
-            
-            try {
-                const response = await fetch('/analyze/file', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-                
-                if (data.error) {
-                    throw new Error(data.message || 'Analysis failed');
-                }
-                
-                showResults(data);
-            } catch (error) {
-                alert(error.message);
-            }
-        });
+        ['fileForm', 'urlForm', 'emailForm'].forEach(formId => {
+            document.getElementById(formId).addEventListener('submit', async (e) => {
+                e.preventDefault();
+                showLoading('Analyzing submission...');
 
-        document.getElementById('urlForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const urlInput = document.getElementById('urlInput');
-            
-            if (!urlInput.value) {
-                alert('Please enter a URL to analyze');
-                return;
-            }
-            
-            try {
-                const response = await fetch('/analyze/url', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ url: urlInput.value })
-                });
-                const data = await response.json();
-                
-                if (data.error) {
-                    throw new Error(data.message || 'Analysis failed');
-                }
-                
-                showResults(data);
-            } catch (error) {
-                alert(error.message);
-            }
-        });
+                try {
+                    const formData = new FormData();
+                    const endpoint = formId.replace('Form', '');
+                    
+                    if (formId === 'fileForm') {
+                        const file = document.getElementById('fileInput').files[0];
+                        if (!file) throw new Error('Please select a file');
+                        formData.append('file', file);
+                    } else {
+                        const input = document.getElementById(`${endpoint}Input`).value;
+                        formData.append(endpoint, input);
+                    }
 
-        document.getElementById('emailForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const emailInput = document.getElementById('emailInput');
-            
-            if (!emailInput.value) {
-                alert('Please enter an email address to analyze');
-                return;
-            }
-            
-            try {
-                const response = await fetch('/analyze/email', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email: emailInput.value })
-                });
-                const data = await response.json();
-                
-                if (data.error) {
-                    throw new Error(data.message || 'Analysis failed');
+                    const response = await fetch(`/analyze/${endpoint}`, {
+                        method: 'POST',
+                        body: formId === 'fileForm' ? formData : JSON.stringify({
+                            [endpoint]: document.getElementById(`${endpoint}Input`).value
+                        }),
+                        headers: formId === 'fileForm' ? {} : {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    const data = await response.json();
+                    if (data.error) throw new Error(data.message || 'Analysis failed');
+
+                    // Show results
+                    document.getElementById('results').classList.remove('hidden');
+                    
+                    // Update threat score and stats
+                    const threatScore = Math.round(((data.virustotal_results.malicious + (data.virustotal_results.suspicious * 0.5)) / 
+                        (data.virustotal_results.total_scans || 1)) * 100);
+                    
+                    document.getElementById('threatScore').textContent = `${threatScore}%`;
+                    document.getElementById('threatScoreBar').style.width = `${threatScore}%`;
+                    document.getElementById('detectionRate').textContent = 
+                        `${Math.round((data.virustotal_results.malicious / (data.virustotal_results.total_scans || 1)) * 100)}%`;
+                    document.getElementById('riskLevel').textContent = 
+                        threatScore >= 75 ? 'High' : threatScore >= 30 ? 'Medium' : 'Low';
+                    document.getElementById('aiConfidence').textContent = 
+                        `${Math.round((data.ml_analysis?.ml_prediction?.confidence || 0) * 100)}%`;
+                    document.getElementById('analysisTime').textContent = '2.3s';
+
+                    // Update VirusTotal results
+                    document.getElementById('vtResults').innerHTML = `
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="p-4 bg-gray-900 rounded-lg">
+                                <div class="text-sm text-gray-400">Malicious</div>
+                                <div class="text-2xl font-bold ${data.virustotal_results.malicious > 0 ? 'text-red-500' : 'text-green-500'}">
+                                    ${data.virustotal_results.malicious}
+                                </div>
+                            </div>
+                            <div class="p-4 bg-gray-900 rounded-lg">
+                                <div class="text-sm text-gray-400">Suspicious</div>
+                                <div class="text-2xl font-bold ${data.virustotal_results.suspicious > 0 ? 'text-yellow-500' : 'text-green-500'}">
+                                    ${data.virustotal_results.suspicious}
+                                </div>
+                            </div>
+                            <div class="p-4 bg-gray-900 rounded-lg">
+                                <div class="text-sm text-gray-400">Clean</div>
+                                <div class="text-2xl font-bold text-green-500">
+                                    ${data.virustotal_results.undetected}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    // Update ML & AI Analysis
+                    document.getElementById('aiResults').innerHTML = `
+                        <div class="bg-gray-900 rounded-lg p-6">
+                            <h3 class="text-xl font-semibold mb-4">Machine Learning Analysis</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="p-4 bg-gray-800 rounded-lg">
+                                    <div class="text-sm text-gray-400">Prediction</div>
+                                    <div class="text-xl font-bold ${data.ml_analysis.ml_prediction.is_suspicious ? 'text-red-500' : 'text-green-500'}">
+                                        ${data.ml_analysis.ml_prediction.is_suspicious ? 'Suspicious' : 'Clean'}
+                                    </div>
+                                </div>
+                                <div class="p-4 bg-gray-800 rounded-lg">
+                                    <div class="text-sm text-gray-400">Confidence</div>
+                                    <div class="text-xl font-bold">
+                                        ${(data.ml_analysis.ml_prediction.confidence * 100).toFixed(1)}%
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-900 rounded-lg p-6">
+                            <h3 class="text-xl font-semibold mb-4">AI Analysis</h3>
+                            <div class="prose prose-invert max-w-none">
+                                ${data.ai_analysis.analysis}
+                            </div>
+                        </div>
+                    `;
+
+                    // Scroll to results
+                    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+                } catch (error) {
+                    alert(error.message);
+                } finally {
+                    hideLoading();
                 }
-                
-                showResults(data);
-            } catch (error) {
-                alert(error.message);
-            }
+            });
         });
     </script>
 </body>

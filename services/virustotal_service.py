@@ -20,14 +20,84 @@ class VirusTotalService:
         
         try:
             if method == 'POST':
+                if data:
+                    headers["content-type"] = "application/x-www-form-urlencoded"
                 response = requests.post(url, headers=headers, data=data, files=files)
             else:
                 response = requests.get(url, headers=headers)
             
+            # Check if response is JSON
+            content_type = response.headers.get('content-type', '')
+            if 'application/json' not in content_type:
+                return {
+                    "error": True,
+                    "message": "Invalid response from VirusTotal API",
+                    "details": "Response was not in JSON format"
+                }
+
             response.raise_for_status()
             return response.json()
+        except requests.exceptions.RequestException as e:
+            return {
+                "error": True,
+                "message": f"Request failed: {str(e)}"
+            }
+        except ValueError as e:
+            return {
+                "error": True,
+                "message": f"Invalid JSON response: {str(e)}"
+            }
         except Exception as e:
-            return {"error": True, "message": str(e)}
+            return {
+                "error": True,
+                "message": f"Unexpected error: {str(e)}"
+            }
+
+    def analyze_url(self, url: str) -> Dict[str, Any]:
+        """Analyze URL using VirusTotal API"""
+        try:
+            # First, submit URL for analysis
+            data = {"url": url}
+            submit_response = self._make_request('urls', 'POST', data=data)
+            
+            if submit_response.get('error'):
+                return submit_response
+
+            # Extract analysis ID from response
+            try:
+                analysis_id = submit_response['data']['id']
+            except (KeyError, TypeError):
+                return {
+                    "error": True,
+                    "message": "Failed to get analysis ID from response"
+                }
+            
+            # Poll for results
+            max_attempts = 5
+            for attempt in range(max_attempts):
+                result_data = self._make_request(f'analyses/{analysis_id}')
+                
+                if result_data.get('error'):
+                    return result_data
+
+                status = result_data.get('data', {}).get('attributes', {}).get('status')
+                
+                if status == 'completed':
+                    return result_data
+                
+                if attempt < max_attempts - 1:
+                    time.sleep(2)
+            
+            return {
+                "error": True,
+                "message": "Analysis timed out"
+            }
+            
+        except Exception as e:
+            return {
+                "error": True,
+                "message": f"URL analysis failed: {str(e)}"
+            }
 
     def analyze_file(self, file) -> Dict[str, Any]:
         """Analyze file using VirusTotal API"""
@@ -39,52 +109,48 @@ class VirusTotalService:
             if upload_response.get('error'):
                 return upload_response
 
-            analysis_id = upload_response['data']['id']
+            try:
+                analysis_id = upload_response['data']['id']
+            except (KeyError, TypeError):
+                return {
+                    "error": True,
+                    "message": "Failed to get analysis ID from response"
+                }
             
             # Poll for results
-            for _ in range(10):
+            max_attempts = 10
+            for attempt in range(max_attempts):
                 result_data = self._make_request(f'analyses/{analysis_id}')
                 
-                if result_data.get('data', {}).get('attributes', {}).get('status') == 'completed':
+                if result_data.get('error'):
+                    return result_data
+
+                status = result_data.get('data', {}).get('attributes', {}).get('status')
+                
+                if status == 'completed':
                     return result_data
                 
-                time.sleep(3)
+                if attempt < max_attempts - 1:
+                    time.sleep(3)
             
-            return {"error": True, "message": "Analysis timed out"}
-            
-        except Exception as e:
-            return {"error": True, "message": str(e)}
-
-    def analyze_url(self, url: str) -> Dict[str, Any]:
-        """Analyze URL using VirusTotal API"""
-        try:
-            # Submit URL for analysis
-            data = {"url": url}
-            submit_response = self._make_request('urls', 'POST', data=data)
-            
-            if submit_response.get('error'):
-                return submit_response
-
-            analysis_id = submit_response['data']['id']
-            
-            # Poll for results
-            for _ in range(5):
-                result_data = self._make_request(f'analyses/{analysis_id}')
-                
-                if result_data.get('data', {}).get('attributes', {}).get('status') == 'completed':
-                    return result_data
-                
-                time.sleep(2)
-            
-            return {"error": True, "message": "Analysis timed out"}
+            return {
+                "error": True,
+                "message": "Analysis timed out"
+            }
             
         except Exception as e:
-            return {"error": True, "message": str(e)}
+            return {
+                "error": True,
+                "message": f"File analysis failed: {str(e)}"
+            }
 
     def analyze_domain(self, domain: str) -> Dict[str, Any]:
-        """Analyze domain from email address using VirusTotal API"""
+        """Analyze domain using VirusTotal API"""
         try:
             response = self._make_request(f'domains/{domain}')
             return response
         except Exception as e:
-            return {"error": True, "message": str(e)}
+            return {
+                "error": True,
+                "message": f"Domain analysis failed: {str(e)}"
+            }

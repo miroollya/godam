@@ -1,3 +1,4 @@
+"""Main application file for the security analyzer"""
 from flask import Flask, request, render_template, jsonify
 import os
 from config import Config
@@ -8,6 +9,7 @@ from services.url_service import URLService
 from services.email_service import EmailService
 from utils.response_formatter import ResponseFormatter
 from utils.file_handler import FileHandler
+from utils.csv_storage import CSVStorage
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -20,6 +22,7 @@ url_service = URLService()
 email_service = EmailService()
 file_handler = FileHandler()
 response_formatter = ResponseFormatter()
+csv_storage = CSVStorage()
 
 @app.route('/')
 def index():
@@ -57,6 +60,15 @@ def analyze_file():
             },
             'file'
         )
+        
+        # Save results to CSV
+        scan_data = {
+            'filename': file.filename,
+            'vt_results': formatted_results,
+            'ml_results': ml_results,
+            'ai_analysis': ai_analysis
+        }
+        csv_storage.save_scan_result('file', scan_data)
         
         return jsonify({
             'virustotal_results': formatted_results,
@@ -110,6 +122,16 @@ def analyze_url():
             'url'
         )
         
+        # Save results to CSV
+        scan_data = {
+            'url': data['url'],
+            'vt_results': formatted_vt_results,
+            'url_analysis': url_analysis,
+            'ml_results': ml_results,
+            'ai_analysis': ai_analysis
+        }
+        csv_storage.save_scan_result('url', scan_data)
+        
         return jsonify({
             'virustotal_results': formatted_vt_results,
             'url_analysis': url_analysis,
@@ -162,6 +184,16 @@ def analyze_email():
             'email'
         )
         
+        # Save results to CSV
+        scan_data = {
+            'email': data['email'],
+            'vt_results': formatted_vt_results,
+            'email_analysis': email_analysis,
+            'ml_results': ml_results,
+            'ai_analysis': ai_analysis
+        }
+        csv_storage.save_scan_result('email', scan_data)
+        
         return jsonify({
             'virustotal_results': formatted_vt_results,
             'email_analysis': email_analysis,
@@ -172,4 +204,7 @@ def analyze_email():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
+    # Initialize required directories
+    os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
+    os.makedirs(Config.DATA_DIR, exist_ok=True)
     app.run(debug=True, host='0.0.0.0')

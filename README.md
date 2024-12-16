@@ -184,10 +184,6 @@ python app.py
 - faris - UI/UX Designer
 - diel - UI/UX Designer
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## 🙏 Acknowledgments
 
 - VirusTotal for their comprehensive threat intelligence API
@@ -204,6 +200,13 @@ For any queries or suggestions, please reach out to:
 
 Here is an example of the AI-Powered Security Analyzer in action:
 
+V1
 ![Example url](uploads/url.png)
 ![Example file](uploads/file.png)
 ![Example email](uploads/email.png)
+
+V2
+![Example url](uploads/interfacev2.png)
+![Example url](uploads/urlv2.png)
+![Example url](uploads/emailv2.png)
+![Example url](uploads/filev2.png)

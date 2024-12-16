@@ -7,6 +7,8 @@ from sklearn.ensemble import RandomForestClassifier
 from models.feature_extractor import FeatureExtractor
 
 class MLService:
+
+    
     def __init__(self):
         self.models_dir = 'models'
         os.makedirs(self.models_dir, exist_ok=True)
